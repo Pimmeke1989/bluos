@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-01-16
+
+### Fixed - CRITICAL HOTFIX
+- **Integration Loading**: Fixed unsafe `coordinator.data` access in `__init__`
+  - Integration now loads successfully
+  - Players are discovered correctly
+  - Prevents KeyError during initialization
+- **Progress Bar Crash**: Fixed `media_position_updated_at` attribute name
+  - Changed from `last_update_success_time` to `last_update_success`
+  - Fixes AttributeError that occurred every update cycle
+  - Progress bar now works without crashes
+
+### Changed
+- **Manufacturer**: Changed from "BluOS" to "Bluesound" (official brand name)
+- **Icon**: Removed custom icon.png (uses default media player icon)
+
+### Notes
+- This is a critical hotfix for v1.0.4 which had breaking bugs
+- If you're on v1.0.4, update immediately to v1.0.5
+
 ## [1.0.4] - 2026-01-16
 
 ### Fixed
@@ -122,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.5]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.5
 [1.0.4]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.4
 [1.0.3]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.3
 [1.0.2]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.2
