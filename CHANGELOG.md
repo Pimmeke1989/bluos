@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-01-16
+
+### Fixed
+- **Volume Display**: Fixed volume showing as 0 instead of actual value
+  - Volume value is in XML text content (`<volume>11</volume>`)
+  - Parser was looking for non-existent `volume` attribute
+  - Now correctly extracts value from `_text` field
+  - Volume now displays correctly (e.g., 11% instead of 0%)
+- **Progress Bar**: Fixed progress bar not appearing during playback
+  - `media_position_updated_at` was returning boolean instead of datetime
+  - Now returns proper datetime using `dt_util.utcnow()`
+  - Progress bar now shows and updates smoothly during playback
+  - Home Assistant can now calculate current position correctly
+
+### Added
+- Debug logging in `get_volume()` method for troubleshooting
+- Debug logging in `volume_level` property for troubleshooting
+
+### Technical Details
+- XML elements with attributes and text content are parsed with text in `_text` field
+- Progress bar requires datetime for `media_position_updated_at` to calculate position
+- Volume endpoint returns: `<volume db="-43.1" mute="0">11</volume>`
+- Parsed as: `{"db": "-43.1", "mute": "0", "_text": "11"}`
+
 ## [1.0.5] - 2026-01-16
 
 ### Fixed - CRITICAL HOTFIX
@@ -142,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.6]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.6
 [1.0.5]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.5
 [1.0.4]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.4
 [1.0.3]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.3
