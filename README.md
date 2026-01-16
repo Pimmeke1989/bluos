@@ -21,7 +21,7 @@ A custom Home Assistant integration for BluOS/Bluesound devices.
 2. Click on "Integrations"
 3. Click the three dots in the top right corner
 4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/pimlo/bluos`
+5. Add this repository URL: `https://github.com/Pimmeke1989/bluos`
 6. Select category: "Integration"
 7. Click "Add"
 8. Search for "BluOS" in HACS

@@ -39,7 +39,7 @@ Enhancement suggestions are welcome! Please:
 
 1. **Fork the Repository**
    ```bash
-   git clone https://github.com/pimlo/bluos.git
+   git clone https://github.com/Pimmeke1989/bluos.git
    cd bluos
    ```
 
@@ -85,7 +85,7 @@ Enhancement suggestions are welcome! Please:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/pimlo/bluos.git
+   git clone https://github.com/Pimmeke1989/bluos.git
    ```
 
 2. **Copy to Home Assistant**

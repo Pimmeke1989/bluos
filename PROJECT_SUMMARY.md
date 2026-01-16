@@ -178,7 +178,7 @@ Before publishing, test the following:
 1. **Create GitHub Repository**
    ```bash
    # Already initialized locally
-   git remote add origin https://github.com/pimlo/bluos.git
+   git remote add origin https://github.com/Pimmeke1989/bluos.git
    git branch -M main
    git push -u origin main
    ```
@@ -226,13 +226,13 @@ Potential features for future versions:
 
 ## Support and Maintenance
 
-- **Issues**: https://github.com/pimlo/bluos/issues
+- **Issues**: https://github.com/Pimmeke1989/bluos/issues
 - **Discussions**: GitHub Discussions (to be enabled)
 - **Updates**: Check CHANGELOG.md for version history
 
 ## Credits
 
-- **Author**: @pimlo
+- **Author**: @Pimmeke1989
 - **Based on**: BluOS Custom Integration API v1.7
 - **License**: MIT
 

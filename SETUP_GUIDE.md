@@ -17,7 +17,7 @@ This guide will walk you through setting up the BluOS integration for Home Assis
    - Click on "Integrations"
    - Click the three dots (⋮) in the top right corner
    - Select "Custom repositories"
-   - Add repository URL: `https://github.com/pimlo/bluos`
+   - Add repository URL: `https://github.com/Pimmeke1989/bluos`
    - Select category: "Integration"
    - Click "Add"
 
@@ -234,7 +234,7 @@ If you encounter issues:
    ```
 
 3. **Report Issues**
-   - Visit https://github.com/pimlo/bluos/issues
+   - Visit https://github.com/Pimmeke1989/bluos/issues
    - Provide details about your setup and the issue
    - Include relevant logs
 

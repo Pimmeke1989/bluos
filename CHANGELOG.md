@@ -32,4 +32,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
-[1.0.0]: https://github.com/pimlo/bluos/releases/tag/v1.0.0
+[1.0.0]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.0

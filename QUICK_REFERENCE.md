@@ -224,4 +224,4 @@ The integration uses these BluOS API endpoints:
 - **Documentation**: [README.md](README.md)
 - **Setup Guide**: [SETUP_GUIDE.md](SETUP_GUIDE.md)
 - **Examples**: [EXAMPLES.md](EXAMPLES.md)
-- **Issues**: https://github.com/pimlo/bluos/issues
+- **Issues**: https://github.com/Pimmeke1989/bluos/issues
