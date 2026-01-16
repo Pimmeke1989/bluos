@@ -143,11 +143,28 @@ class BluOSApi:
             # Quality
             "quality": status.get("quality", "0"),
             "db": status.get("db", "0"),
+            # Battery info (for battery-powered devices like Flex)
+            "battery": self._parse_battery(status.get("battery")),
             # Group (for compatibility)
             "group": status.get("group", {}),
         }
         
         return result
+    
+    def _parse_battery(self, battery_data: dict | None) -> dict[str, Any]:
+        """Parse battery information.
+        
+        Battery XML format: <battery level="100" charging="true" icon="..."/>
+        Parsed as: {"level": "100", "charging": "true", "icon": "..."}
+        """
+        if not battery_data:
+            return {}
+        
+        return {
+            "level": int(battery_data.get("level", 0)),
+            "charging": battery_data.get("charging", "false") == "true",
+            "icon": battery_data.get("icon", ""),
+        }
 
     def _parse_state(self, state: str | None) -> str:
         """Parse player state."""
@@ -164,7 +181,12 @@ class BluOSApi:
         return state_map.get(state.lower(), "idle")
 
     def get_sync_status(self) -> dict[str, Any] | None:
-        """Get sync/group status."""
+        """Get sync/group status and device information.
+        
+        SyncStatus includes device details:
+        <SyncStatus name="FLEX Speaker" model="P125" modelName="PULSE FLEX 2i" 
+                    brand="Bluesound" icon="..." ...>
+        """
         response = self._get("SyncStatus")
         if not response:
             return None
@@ -179,6 +201,13 @@ class BluOSApi:
             "slaves": [],
             "zone": sync_status.get("zone"),
             "master_id": sync_status.get("master"),
+            # Device information from SyncStatus
+            "device_name": sync_status.get("name", ""),
+            "model": sync_status.get("model", ""),
+            "model_name": sync_status.get("modelName", ""),
+            "brand": sync_status.get("brand", ""),
+            "icon": sync_status.get("icon", ""),
+            "mac": sync_status.get("mac", ""),
         }
         
         # Check if this player is a slave

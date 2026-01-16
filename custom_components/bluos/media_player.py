@@ -91,16 +91,26 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_media_player"
         
-        # Get player name safely
-        player_name = "BluOS Player"
-        if coordinator.data and "status" in coordinator.data:
-            player_name = coordinator.data["status"].get("name", "BluOS Player")
+        # Get device information from SyncStatus (more detailed than Status)
+        sync_status = coordinator.data.get("sync_status", {}) if coordinator.data else {}
+        
+        # Use device name from SyncStatus, fallback to Status, then default
+        device_name = sync_status.get("device_name", "")
+        if not device_name and coordinator.data and "status" in coordinator.data:
+            device_name = coordinator.data["status"].get("name", "BluOS Player")
+        if not device_name:
+            device_name = "BluOS Player"
+        
+        # Get model and brand from SyncStatus
+        model_name = sync_status.get("model_name", "")
+        model = sync_status.get("model", "BluOS Player")
+        brand = sync_status.get("brand", "Pimmeke1989")
         
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": player_name,
-            "manufacturer": "Bluesound",
-            "model": "BluOS Player",
+            "name": device_name,  # e.g., "FLEX Speaker"
+            "manufacturer": brand,  # e.g., "Bluesound" or "Pimmeke1989"
+            "model": model_name if model_name else model,  # e.g., "PULSE FLEX 2i" or "P125"
             "configuration_url": f"http://{entry.data[CONF_HOST]}:{entry.data.get('port', 11000)}",
         }
         self._attr_supported_features = SUPPORT_BLUOS
