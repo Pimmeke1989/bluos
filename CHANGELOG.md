@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-01-16
+
+### Fixed
+- **Spotify and Local Music Playback**: Major fix for media information display
+  - Now correctly parses separate `artist` and `album` XML fields from Spotify/local music
+  - Previously only parsed radio format with "ARTIST - TITLE" in title2
+  - Track name, artist, and album now display correctly for Spotify and local files
+  - Radio streams continue to work as before
+- **Progress Bar**: Added `media_position_updated_at` property
+  - Progress bar now works during playback
+  - Shows current position in track
+- **Volume Display**: Added fallback to `/Status` endpoint
+  - Prevents volume showing as 0 if `/Volume` endpoint fails
+  - More robust volume reporting
+- **Image Display**: Added `currentImage` to image sources
+  - Spotify album art now displays correctly
+
+### Added
+- **Device Configuration URL**: Link to BluOS web interface on device page
+- Smart parsing logic that detects Spotify vs Radio format automatically
+
+### Changed
+- Media information parsing now checks for separate artist/album fields first
+- Falls back to title2 parsing for radio streams
+- More robust error handling for volume endpoint
+
 ## [1.0.3] - 2026-01-16
 
 ### Fixed
@@ -96,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.4]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.4
 [1.0.3]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.3
 [1.0.2]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.2
 [1.0.1]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.1
