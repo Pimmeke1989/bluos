@@ -79,6 +79,23 @@ class BluOSApi:
         if not status:
             return None
         
+        # Parse artist and title from title2 if available
+        # Format is usually "ARTIST - TITLE" or just the title
+        title2 = status.get("title2", "")
+        artist = ""
+        title = ""
+        
+        if " - " in title2:
+            # Split on first " - " to separate artist and title
+            parts = title2.split(" - ", 1)
+            artist = parts[0].strip()
+            title = parts[1].strip()
+        else:
+            title = title2
+        
+        # Get image URL - can be full URL or path
+        image = status.get("image", "") or status.get("stationImage", "")
+        
         # Extract relevant information
         result = {
             "name": status.get("name", "BluOS Player"),
@@ -88,14 +105,33 @@ class BluOSApi:
             "shuffle": status.get("shuffle", "0") == "1",
             "repeat": status.get("repeat", "0"),
             "service": status.get("service", ""),
-            "title1": status.get("title1", ""),
-            "title2": status.get("title2", ""),
-            "title3": status.get("title3", ""),
-            "image": status.get("image", ""),
-            "album": status.get("album", ""),
-            "artist": status.get("artist", ""),
+            "service_name": status.get("serviceName", ""),
+            "service_icon": status.get("serviceIcon", ""),
+            # Title fields from BluOS
+            "title1": status.get("title1", ""),  # Usually station/album name
+            "title2": title2,  # Usually "ARTIST - TITLE"
+            "title3": status.get("title3", ""),  # Usually description/tagline
+            # Parsed fields for media player
+            "title": title or status.get("title1", ""),  # Actual song/track title
+            "artist": artist,  # Parsed artist
+            "album": status.get("album", "") or status.get("title1", ""),  # Album or station name
+            # Image
+            "image": image,
+            # Playback info
             "totlen": int(status.get("totlen", 0)),
             "secs": int(status.get("secs", 0)),
+            "can_seek": status.get("canSeek", "0") == "1",
+            # Stream info
+            "stream_format": status.get("streamFormat", ""),
+            "stream_url": status.get("streamUrl", ""),
+            # Preset info
+            "is_preset": status.get("is_preset", "false") == "true",
+            "preset_id": status.get("preset_id", ""),
+            "preset_name": status.get("preset_name", ""),
+            # Quality
+            "quality": status.get("quality", "0"),
+            "db": status.get("db", "0"),
+            # Group (for compatibility)
             "group": status.get("group", {}),
         }
         
@@ -135,7 +171,12 @@ class BluOSApi:
         
         # Check if this player is a slave
         if sync_status.get("master"):
-            result["master"] = sync_status.get("master")
+            master_data = sync_status.get("master")
+            # Master can be a string (IP) or a dict with _text containing the IP
+            if isinstance(master_data, dict):
+                result["master"] = master_data.get("_text", "")
+            else:
+                result["master"] = master_data
         
         # Get list of slaves if this is a master
         if "slave" in sync_status:
@@ -144,7 +185,7 @@ class BluOSApi:
                 slaves = [slaves]
             result["slaves"] = [
                 {
-                    "ip": slave.get("ip", ""),
+                    "ip": slave.get("ip", "") if isinstance(slave.get("ip"), str) else slave.get("ip", {}).get("_text", ""),
                     "name": slave.get("name", ""),
                     "zone": slave.get("zone", ""),
                 }

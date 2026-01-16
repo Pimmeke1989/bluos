@@ -142,7 +142,8 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         if not self.coordinator.data:
             return None
         
-        return self.coordinator.data["status"].get("title1", "")
+        # Use parsed title (from title2) or fall back to title1
+        return self.coordinator.data["status"].get("title", "")
 
     @property
     def media_artist(self) -> str | None:
@@ -168,7 +169,11 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         image = self.coordinator.data["status"].get("image", "")
         if image:
-            return f"http://{self._entry.data[CONF_HOST]}:{self._entry.data.get('port', 11000)}{image}"
+            # Image can be a full URL or a path
+            if image.startswith("http://") or image.startswith("https://"):
+                return image
+            else:
+                return f"http://{self._entry.data[CONF_HOST]}:{self._entry.data.get('port', 11000)}{image}"
         return None
 
     @property
@@ -344,36 +349,43 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         _LOGGER.debug("Master entity found: %s", master_entity)
         
-        # Find the master player's coordinator by matching entry_id from entity_id
-        # Entity ID format: media_player.{device_name}_{entry_id}
+        # Find the master player's coordinator
         master_coordinator = None
         master_ip = None
         
-        # Try to find coordinator by checking all BluOS integrations
-        for entry_id, coordinator in self.hass.data[DOMAIN].items():
-            # Check if this coordinator's entity matches the master entity_id
-            # We can match by checking if the entry_id is in the master entity_id
-            if entry_id in master:
-                master_coordinator = coordinator
-                master_ip = coordinator.entry.data[CONF_HOST]
-                _LOGGER.debug("Found master coordinator by entry_id: %s (IP: %s)", entry_id, master_ip)
-                break
+        # Method 1: Try to find by matching entity_id to the coordinator's entities
+        from homeassistant.helpers import entity_registry as er
+        entity_reg = er.async_get(self.hass)
+        master_entity_entry = entity_reg.async_get(master)
         
-        # If not found by entry_id, try matching by IP from attributes
+        if master_entity_entry:
+            _LOGGER.debug("Master entity entry found: config_entry_id=%s", master_entity_entry.config_entry_id)
+            # Try to find coordinator by config entry ID
+            if master_entity_entry.config_entry_id in self.hass.data[DOMAIN]:
+                master_coordinator = self.hass.data[DOMAIN][master_entity_entry.config_entry_id]
+                master_ip = master_coordinator.entry.data[CONF_HOST]
+                _LOGGER.debug("Found master coordinator by entity registry: %s (IP: %s)", 
+                             master_entity_entry.config_entry_id, master_ip)
+        
+        # Method 2: If not found, try matching by device name
         if not master_coordinator:
+            _LOGGER.debug("Trying to match by device name")
+            master_name = master_entity.attributes.get("friendly_name", "")
             for entry_id, coordinator in self.hass.data[DOMAIN].items():
-                coordinator_ip = coordinator.entry.data[CONF_HOST]
-                # Check if IPs match (from blueos_group attribute or other means)
-                if master_entity.attributes.get(ATTR_BLUEOS_GROUP):
-                    if coordinator_ip in master_entity.attributes.get(ATTR_BLUEOS_GROUP, []):
-                        master_coordinator = coordinator
-                        master_ip = coordinator_ip
-                        _LOGGER.debug("Found master coordinator by IP match: %s", master_ip)
-                        break
+                coordinator_name = coordinator.data.get("status", {}).get("name", "")
+                if coordinator_name and coordinator_name in master_name:
+                    master_coordinator = coordinator
+                    master_ip = coordinator.entry.data[CONF_HOST]
+                    _LOGGER.debug("Found master coordinator by name match: %s (IP: %s)", entry_id, master_ip)
+                    break
         
-        if not master_coordinator or not master_ip:
-            _LOGGER.error("Could not find coordinator for master player %s. Available coordinators: %s", 
-                         master, list(self.hass.data[DOMAIN].keys()))
+        # Method 3: If still not found, we can still make a direct API call if we can get the IP
+        if not master_coordinator:
+            _LOGGER.warning("Could not find master coordinator. Available coordinators: %s", 
+                          list(self.hass.data[DOMAIN].keys()))
+            # Try to get IP from blueos_group attribute or other means
+            # For now, we'll need the coordinator, so return error
+            _LOGGER.error("Cannot join without finding master coordinator")
             return
         
         slave_ip = self._entry.data[CONF_HOST]
@@ -418,20 +430,24 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         _LOGGER.debug("Found master coordinator for IP %s", master_ip)
                         break
                 
+                slave_ip = self._entry.data[CONF_HOST]
+                
                 if master_coordinator:
-                    slave_ip = self._entry.data[CONF_HOST]
+                    # Use the master's coordinator to remove this slave
                     result = await self.hass.async_add_executor_job(
                         master_coordinator.api.remove_slave, slave_ip
                     )
-                    _LOGGER.debug("RemoveSlave result: %s", result)
+                    _LOGGER.debug("RemoveSlave via coordinator result: %s", result)
                     await master_coordinator.async_request_refresh()
                 else:
-                    _LOGGER.warning("Could not find master coordinator for IP %s, trying direct unjoin", master_ip)
-                    # Try to unjoin directly from this player
+                    # Master coordinator not found in HA, make direct API call to master
+                    _LOGGER.warning("Could not find master coordinator for IP %s, making direct API call", master_ip)
+                    from .bluos_api import BluOSApi
+                    master_api = BluOSApi(master_ip, self._entry.data.get("port", 11000))
                     result = await self.hass.async_add_executor_job(
-                        self.coordinator.api.remove_slave
+                        master_api.remove_slave, slave_ip
                     )
-                    _LOGGER.debug("Direct unjoin result: %s", result)
+                    _LOGGER.debug("RemoveSlave via direct API result: %s", result)
             else:
                 # This player is a master or standalone, remove all slaves
                 _LOGGER.info("Player is master or standalone. Ungrouping all slaves")
