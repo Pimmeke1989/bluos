@@ -116,20 +116,31 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def volume_level(self) -> float | None:
-        """Volume level of the media player (0..1)."""
+        """Volume level of the media player (0..1).
+        
+        Uses /Volume endpoint which returns individual player volume,
+        even when grouped (unlike /Status which returns master's volume).
+        """
         if not self.coordinator.data:
             return None
         
-        volume = self.coordinator.data["status"].get("volume", 0)
+        # Use volume from /Volume endpoint for accurate individual volume
+        volume_data = self.coordinator.data.get("volume", {})
+        volume = volume_data.get("volume", 0)
         return volume / 100
 
     @property
     def is_volume_muted(self) -> bool | None:
-        """Boolean if volume is currently muted."""
+        """Boolean if volume is currently muted.
+        
+        Uses /Volume endpoint for accurate mute status.
+        """
         if not self.coordinator.data:
             return None
         
-        return self.coordinator.data["status"].get("mute", False)
+        # Use mute from /Volume endpoint
+        volume_data = self.coordinator.data.get("volume", {})
+        return volume_data.get("mute", False)
 
     @property
     def media_content_type(self) -> str | None:
@@ -174,6 +185,17 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 return image
             else:
                 return f"http://{self._entry.data[CONF_HOST]}:{self._entry.data.get('port', 11000)}{image}"
+        return None
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend.
+        
+        Shows media art when playing, otherwise None (uses default speaker icon).
+        """
+        # Only show media art when actually playing
+        if self.state == MediaPlayerState.PLAYING:
+            return self.media_image_url
         return None
 
     @property

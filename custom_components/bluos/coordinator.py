@@ -39,6 +39,7 @@ class BluOSDataUpdateCoordinator(DataUpdateCoordinator):
                 self.api.get_sync_status
             )
             presets = await self.hass.async_add_executor_job(self.api.get_presets)
+            volume = await self.hass.async_add_executor_job(self.api.get_volume)
 
             if status is None:
                 raise UpdateFailed("Failed to fetch player status")
@@ -47,6 +48,7 @@ class BluOSDataUpdateCoordinator(DataUpdateCoordinator):
                 "status": status,
                 "sync_status": sync_status or {},
                 "presets": presets,
+                "volume": volume or {},
             }
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

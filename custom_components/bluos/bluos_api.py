@@ -217,6 +217,29 @@ class BluOSApi:
             for preset in presets
         ]
 
+    def get_volume(self) -> dict[str, Any] | None:
+        """Get volume information from /Volume endpoint.
+        
+        This endpoint returns the individual player's volume,
+        even when grouped (unlike /Status which returns master's volume).
+        """
+        response = self._get("Volume")
+        if not response:
+            return None
+        
+        volume_data = self._parse_xml(response)
+        if not volume_data:
+            return None
+        
+        # Parse volume information
+        result = {
+            "volume": int(volume_data.get("volume", 0)),
+            "mute": volume_data.get("mute", "0") == "1",
+            "db": volume_data.get("db", "0"),
+        }
+        
+        return result
+
     def play(self) -> bool:
         """Start playback."""
         response = self._get("Play")
