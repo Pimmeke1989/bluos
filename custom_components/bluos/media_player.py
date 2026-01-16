@@ -90,10 +90,16 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_media_player"
+        
+        # Get player name safely
+        player_name = "BluOS Player"
+        if coordinator.data and "status" in coordinator.data:
+            player_name = coordinator.data["status"].get("name", "BluOS Player")
+        
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": coordinator.data["status"].get("name", "BluOS Player"),
-            "manufacturer": "BluOS",
+            "name": player_name,
+            "manufacturer": "Bluesound",
             "model": "BluOS Player",
             "configuration_url": f"http://{entry.data[CONF_HOST]}:{entry.data.get('port', 11000)}",
         }
@@ -231,7 +237,9 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         Returns value from homeassistant.util.dt.utcnow().
         """
-        return self.coordinator.last_update_success_time
+        if self.coordinator.last_update_success:
+            return self.coordinator.last_update_success
+        return None
 
     @property
     def source(self) -> str | None:
