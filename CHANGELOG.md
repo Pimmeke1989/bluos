@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-01-16
+
+### Added
+- **Battery Sensors**: Automatic battery monitoring for battery-powered devices
+  - Battery level sensor (0-100%) with device class BATTERY
+  - Battery charging status sensor ("Charging" / "Not charging")
+  - Sensors only created if device has battery information
+  - Updates automatically with coordinator (every 5 seconds)
+- **Enhanced Device Information**: Better device identification from SyncStatus
+  - Device name from SyncStatus (e.g., "FLEX Speaker" instead of "BluOS Player")
+  - Model name from SyncStatus (e.g., "PULSE FLEX 2i" instead of generic model)
+  - Brand/manufacturer from SyncStatus (e.g., "Bluesound")
+  - MAC address tracking
+  - Device icon path
+
+### Changed
+- **Manufacturer**: Default manufacturer changed to "Pimmeke1989" (uses brand from SyncStatus if available)
+- **Device Naming**: All entities now use device name from SyncStatus for consistency
+- **SyncStatus Parsing**: Enhanced to extract device metadata (name, model, modelName, brand, icon, mac)
+
+### Technical Details
+- Battery XML format: `<battery level="100" charging="true" icon="..."/>`
+- SyncStatus provides: name, model, modelName, brand, icon, mac
+- Sensor platform added to integration
+- Battery sensors use same device_info as media player for proper grouping
+
 ## [1.0.6] - 2026-01-16
 
 ### Fixed
@@ -166,6 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.7]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.7
 [1.0.6]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.6
 [1.0.5]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.5
 [1.0.4]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.4
