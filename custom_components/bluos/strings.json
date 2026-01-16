@@ -26,6 +26,10 @@
                 "master": {
                     "name": "Master Player",
                     "description": "The entity ID of the master player to join"
+                },
+                "group_name": {
+                    "name": "Group Name",
+                    "description": "Optional name for the group. If not provided, BluOS will assign a default name"
                 }
             }
         },

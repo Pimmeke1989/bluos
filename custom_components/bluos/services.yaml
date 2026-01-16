@@ -15,6 +15,13 @@ join:
         entity:
           domain: media_player
           integration: bluos
+    group_name:
+      name: Group Name
+      description: Optional name for the group. If not provided, BluOS will assign a default name
+      required: false
+      example: "Living Room Group"
+      selector:
+        text:
 
 unjoin:
   name: Unjoin

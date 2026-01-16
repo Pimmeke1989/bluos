@@ -241,17 +241,21 @@ class BluOSApi:
         response = self._get("Repeat", {"state": repeat})
         return response is not None
 
-    def add_slave(self, slave_ip: str, group_name: str = "Group") -> bool:
+    def add_slave(self, slave_ip: str, group_name: str | None = None) -> bool:
         """Add a slave player to this master."""
-        # BluOS AddSlave requires specific parameters
-        # channelMode: 0=stereo, 1=left, 2=right
-        # group: name of the group
+        # BluOS AddSlave parameters
+        # slave: IP address of the secondary player (required)
+        # port: Port number of the secondary player (required)
+        # group: OPTIONAL, name of the group. If not provided, BluOS will give a default group name
         params = {
             "slave": slave_ip,
             "port": str(self.port),
-            "channelMode": "0",  # Stereo mode
-            "group": group_name,
         }
+        
+        # Only add group parameter if provided
+        if group_name:
+            params["group"] = group_name
+        
         _LOGGER.debug("Adding slave %s to master %s with params: %s", slave_ip, self.host, params)
         response = self._get("AddSlave", params)
         _LOGGER.debug("AddSlave response: %s", response)
