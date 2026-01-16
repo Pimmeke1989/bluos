@@ -134,12 +134,19 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         # Try to use volume from /Volume endpoint for accurate individual volume
         volume_data = self.coordinator.data.get("volume", {})
+        _LOGGER.debug("volume_level: volume_data = %s", volume_data)
+        
         if volume_data and "volume" in volume_data:
             volume = volume_data.get("volume", 0)
+            _LOGGER.debug("volume_level: Using /Volume endpoint, volume = %s", volume)
         else:
             # Fallback to /Status volume if /Volume failed
             volume = self.coordinator.data["status"].get("volume", 0)
-        return volume / 100
+            _LOGGER.debug("volume_level: Using /Status fallback, volume = %s", volume)
+        
+        result = volume / 100
+        _LOGGER.debug("volume_level: Final result = %s", result)
+        return result
 
     @property
     def is_volume_muted(self) -> bool | None:
@@ -237,9 +244,20 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         Returns value from homeassistant.util.dt.utcnow().
         """
-        if self.coordinator.last_update_success:
-            return self.coordinator.last_update_success
-        return None
+        # Only return timestamp when we have valid data
+        if not self.coordinator.data:
+            return None
+        
+        # Return the coordinator's last successful update time
+        # This is used by Home Assistant to calculate current position
+        from homeassistant.util import dt as dt_util
+        
+        # Use the coordinator's last update time if available
+        if hasattr(self.coordinator, 'last_update_success_time'):
+            return self.coordinator.last_update_success_time
+        
+        # Fallback: return current time (less accurate but works)
+        return dt_util.utcnow()
 
     @property
     def source(self) -> str | None:

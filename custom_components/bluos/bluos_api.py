@@ -234,22 +234,37 @@ class BluOSApi:
         
         This endpoint returns the individual player's volume,
         even when grouped (unlike /Status which returns master's volume).
+        
+        The volume value is in the text content of the XML element:
+        <volume db="-43.1" mute="0">11</volume>
+        Parsed as: {"db": "-43.1", "mute": "0", "_text": "11"}
         """
         response = self._get("Volume")
         if not response:
+            _LOGGER.debug("get_volume: No response from /Volume endpoint for %s", self.host)
             return None
+        
+        _LOGGER.debug("get_volume: Raw response from %s: %s", self.host, response[:200])
         
         volume_data = self._parse_xml(response)
         if not volume_data:
+            _LOGGER.debug("get_volume: Failed to parse XML response for %s", self.host)
             return None
+        
+        _LOGGER.debug("get_volume: Parsed data from %s: %s", self.host, volume_data)
+        
+        # The volume value is in the _text field (XML text content)
+        # <volume db="-43.1" mute="0">11</volume> → {"_text": "11", "db": "-43.1", ...}
+        volume_value = volume_data.get("_text", "0")
         
         # Parse volume information
         result = {
-            "volume": int(volume_data.get("volume", 0)),
+            "volume": int(volume_value),
             "mute": volume_data.get("mute", "0") == "1",
             "db": volume_data.get("db", "0"),
         }
         
+        _LOGGER.debug("get_volume: Result for %s: %s", self.host, result)
         return result
 
     def play(self) -> bool:
