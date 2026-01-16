@@ -333,45 +333,113 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_join_player(self, master: str) -> None:
         """Join this player to a master player."""
-        # Get the master player's IP address from entity_id
+        _LOGGER.info("Attempting to join %s to master %s", self.entity_id, master)
+        
+        # Get the master player's entity state
         master_entity = self.hass.states.get(master)
         if not master_entity:
-            _LOGGER.error("Master player %s not found", master)
+            _LOGGER.error("Master player entity %s not found in Home Assistant", master)
             return
         
-        # Find the master player's coordinator to get its IP
-        for entry_id, coordinator in self.hass.data[DOMAIN].items():
-            if coordinator.data["status"]["name"] == master_entity.attributes.get("friendly_name"):
-                master_ip = coordinator.entry.data[CONF_HOST]
-                
-                # Call AddSlave on the master
-                await self.hass.async_add_executor_job(
-                    coordinator.api.add_slave, self._entry.data[CONF_HOST]
-                )
-                
-                # Refresh both players
-                await coordinator.async_request_refresh()
-                await self.coordinator.async_request_refresh()
-                return
+        _LOGGER.debug("Master entity found: %s", master_entity)
         
-        _LOGGER.error("Could not find master player coordinator for %s", master)
+        # Find the master player's coordinator by matching entry_id from entity_id
+        # Entity ID format: media_player.{device_name}_{entry_id}
+        master_coordinator = None
+        master_ip = None
+        
+        # Try to find coordinator by checking all BluOS integrations
+        for entry_id, coordinator in self.hass.data[DOMAIN].items():
+            # Check if this coordinator's entity matches the master entity_id
+            # We can match by checking if the entry_id is in the master entity_id
+            if entry_id in master:
+                master_coordinator = coordinator
+                master_ip = coordinator.entry.data[CONF_HOST]
+                _LOGGER.debug("Found master coordinator by entry_id: %s (IP: %s)", entry_id, master_ip)
+                break
+        
+        # If not found by entry_id, try matching by IP from attributes
+        if not master_coordinator:
+            for entry_id, coordinator in self.hass.data[DOMAIN].items():
+                coordinator_ip = coordinator.entry.data[CONF_HOST]
+                # Check if IPs match (from blueos_group attribute or other means)
+                if master_entity.attributes.get(ATTR_BLUEOS_GROUP):
+                    if coordinator_ip in master_entity.attributes.get(ATTR_BLUEOS_GROUP, []):
+                        master_coordinator = coordinator
+                        master_ip = coordinator_ip
+                        _LOGGER.debug("Found master coordinator by IP match: %s", master_ip)
+                        break
+        
+        if not master_coordinator or not master_ip:
+            _LOGGER.error("Could not find coordinator for master player %s. Available coordinators: %s", 
+                         master, list(self.hass.data[DOMAIN].keys()))
+            return
+        
+        slave_ip = self._entry.data[CONF_HOST]
+        _LOGGER.info("Calling AddSlave on master %s to add slave %s", master_ip, slave_ip)
+        
+        # Call AddSlave on the master
+        try:
+            result = await self.hass.async_add_executor_job(
+                master_coordinator.api.add_slave, slave_ip
+            )
+            _LOGGER.debug("AddSlave result: %s", result)
+            
+            if not result:
+                _LOGGER.error("AddSlave command failed")
+                return
+            
+            # Refresh both players
+            await master_coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()
+            _LOGGER.info("Successfully joined %s to %s", slave_ip, master_ip)
+        except Exception as err:
+            _LOGGER.error("Error joining player: %s", err, exc_info=True)
 
     async def async_unjoin_player(self) -> None:
         """Unjoin this player from its group."""
+        _LOGGER.info("Attempting to unjoin player %s", self.entity_id)
+        
         sync_status = self.coordinator.data.get("sync_status", {})
+        _LOGGER.debug("Current sync status: %s", sync_status)
         
-        if sync_status.get("master"):
-            # This player is a slave, remove it from the master
-            # Find the master's coordinator
-            for entry_id, coordinator in self.hass.data[DOMAIN].items():
-                if coordinator.entry.data[CONF_HOST] == sync_status["master"]:
-                    await self.hass.async_add_executor_job(
-                        coordinator.api.remove_slave, self._entry.data[CONF_HOST]
+        try:
+            if sync_status.get("master"):
+                # This player is a slave, remove it from the master
+                master_ip = sync_status["master"]
+                _LOGGER.info("Player is a slave. Removing from master %s", master_ip)
+                
+                # Find the master's coordinator
+                master_coordinator = None
+                for entry_id, coordinator in self.hass.data[DOMAIN].items():
+                    if coordinator.entry.data[CONF_HOST] == master_ip:
+                        master_coordinator = coordinator
+                        _LOGGER.debug("Found master coordinator for IP %s", master_ip)
+                        break
+                
+                if master_coordinator:
+                    slave_ip = self._entry.data[CONF_HOST]
+                    result = await self.hass.async_add_executor_job(
+                        master_coordinator.api.remove_slave, slave_ip
                     )
-                    await coordinator.async_request_refresh()
-                    break
-        else:
-            # This player is a master or standalone, remove all slaves
-            await self.hass.async_add_executor_job(self.coordinator.api.remove_slave)
-        
-        await self.coordinator.async_request_refresh()
+                    _LOGGER.debug("RemoveSlave result: %s", result)
+                    await master_coordinator.async_request_refresh()
+                else:
+                    _LOGGER.warning("Could not find master coordinator for IP %s, trying direct unjoin", master_ip)
+                    # Try to unjoin directly from this player
+                    result = await self.hass.async_add_executor_job(
+                        self.coordinator.api.remove_slave
+                    )
+                    _LOGGER.debug("Direct unjoin result: %s", result)
+            else:
+                # This player is a master or standalone, remove all slaves
+                _LOGGER.info("Player is master or standalone. Ungrouping all slaves")
+                result = await self.hass.async_add_executor_job(
+                    self.coordinator.api.remove_slave
+                )
+                _LOGGER.debug("Ungroup all result: %s", result)
+            
+            await self.coordinator.async_request_refresh()
+            _LOGGER.info("Successfully unjoined player %s", self.entity_id)
+        except Exception as err:
+            _LOGGER.error("Error unjoining player: %s", err, exc_info=True)

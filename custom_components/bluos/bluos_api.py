@@ -241,13 +241,20 @@ class BluOSApi:
         response = self._get("Repeat", {"state": repeat})
         return response is not None
 
-    def add_slave(self, slave_ip: str) -> bool:
+    def add_slave(self, slave_ip: str, group_name: str = "Group") -> bool:
         """Add a slave player to this master."""
+        # BluOS AddSlave requires specific parameters
+        # channelMode: 0=stereo, 1=left, 2=right
+        # group: name of the group
         params = {
             "slave": slave_ip,
-            "port": self.port,
+            "port": str(self.port),
+            "channelMode": "0",  # Stereo mode
+            "group": group_name,
         }
+        _LOGGER.debug("Adding slave %s to master %s with params: %s", slave_ip, self.host, params)
         response = self._get("AddSlave", params)
+        _LOGGER.debug("AddSlave response: %s", response)
         return response is not None
 
     def remove_slave(self, slave_ip: str | None = None) -> bool:
@@ -255,9 +262,12 @@ class BluOSApi:
         if slave_ip:
             # Remove specific slave
             params = {"slave": slave_ip}
+            _LOGGER.debug("Removing slave %s from master %s", slave_ip, self.host)
         else:
             # Unjoin this player from its group
             params = {}
+            _LOGGER.debug("Ungrouping player %s", self.host)
         
         response = self._get("RemoveSlave", params)
+        _LOGGER.debug("RemoveSlave response: %s", response)
         return response is not None
