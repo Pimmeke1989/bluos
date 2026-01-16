@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-01-16
+
+### Fixed
+- **Volume Display for Grouped Players**: Major fix for volume reporting
+  - Now uses `/Volume` endpoint instead of `/Status` for volume information
+  - Each player now shows its individual volume, even when grouped
+  - Previously, grouped slaves showed the master's volume
+  - Volume control continues to work correctly for all players
+
+### Added
+- **Integration Logo**: Added Bluesound logo (`icon.png`)
+  - Shows in Settings → Devices & Services
+  - Shows in HACS integration list
+  - Professional branding throughout Home Assistant
+- **Entity Picture**: Dynamic entity icons
+  - Shows media artwork when playing
+  - Shows default speaker icon when idle/paused
+  - Fixes broken image icon in entity picker
+- **Volume API Method**: New `get_volume()` method in API client
+  - Fetches individual player volume from `/Volume` endpoint
+  - Returns accurate volume even for grouped players
+
+### Changed
+- Volume data now fetched from `/Volume` endpoint on every update
+- Entity picture dynamically updates based on playback state
+
 ## [1.0.2] - 2026-01-16
 
 ### Fixed
@@ -70,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.3]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.3
 [1.0.2]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.2
 [1.0.1]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.0
