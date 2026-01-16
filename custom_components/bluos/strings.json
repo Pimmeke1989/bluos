@@ -1,0 +1,37 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Set up BluOS",
+                "description": "Enter the connection details for your BluOS device",
+                "data": {
+                    "host": "IP Address",
+                    "port": "Port"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to the BluOS device. Please check the IP address and port.",
+            "unknown": "Unexpected error occurred"
+        },
+        "abort": {
+            "already_configured": "This BluOS device is already configured"
+        }
+    },
+    "services": {
+        "join": {
+            "name": "Join",
+            "description": "Join this player to a master player group",
+            "fields": {
+                "master": {
+                    "name": "Master Player",
+                    "description": "The entity ID of the master player to join"
+                }
+            }
+        },
+        "unjoin": {
+            "name": "Unjoin",
+            "description": "Remove this player from its group"
+        }
+    }
+}
