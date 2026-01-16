@@ -95,6 +95,7 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             "name": coordinator.data["status"].get("name", "BluOS Player"),
             "manufacturer": "BluOS",
             "model": "BluOS Player",
+            "configuration_url": f"http://{entry.data[CONF_HOST]}:{entry.data.get('port', 11000)}",
         }
         self._attr_supported_features = SUPPORT_BLUOS
 
@@ -120,13 +121,18 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         Uses /Volume endpoint which returns individual player volume,
         even when grouped (unlike /Status which returns master's volume).
+        Falls back to /Status if /Volume fails.
         """
         if not self.coordinator.data:
             return None
         
-        # Use volume from /Volume endpoint for accurate individual volume
+        # Try to use volume from /Volume endpoint for accurate individual volume
         volume_data = self.coordinator.data.get("volume", {})
-        volume = volume_data.get("volume", 0)
+        if volume_data and "volume" in volume_data:
+            volume = volume_data.get("volume", 0)
+        else:
+            # Fallback to /Status volume if /Volume failed
+            volume = self.coordinator.data["status"].get("volume", 0)
         return volume / 100
 
     @property
@@ -134,13 +140,18 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Boolean if volume is currently muted.
         
         Uses /Volume endpoint for accurate mute status.
+        Falls back to /Status if /Volume fails.
         """
         if not self.coordinator.data:
             return None
         
-        # Use mute from /Volume endpoint
+        # Try to use mute from /Volume endpoint
         volume_data = self.coordinator.data.get("volume", {})
-        return volume_data.get("mute", False)
+        if volume_data and "mute" in volume_data:
+            return volume_data.get("mute", False)
+        else:
+            # Fallback to /Status mute if /Volume failed
+            return self.coordinator.data["status"].get("mute", False)
 
     @property
     def media_content_type(self) -> str | None:
@@ -213,6 +224,14 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             return None
         
         return self.coordinator.data["status"].get("secs", 0)
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+        
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self.coordinator.last_update_success_time
 
     @property
     def source(self) -> str | None:

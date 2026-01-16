@@ -79,22 +79,34 @@ class BluOSApi:
         if not status:
             return None
         
-        # Parse artist and title from title2 if available
-        # Format is usually "ARTIST - TITLE" or just the title
-        title2 = status.get("title2", "")
-        artist = ""
-        title = ""
+        # Parse artist and title
+        # Spotify and local music provide separate artist/album fields
+        # Radio streams combine them in title2 as "ARTIST - TITLE"
         
-        if " - " in title2:
-            # Split on first " - " to separate artist and title
-            parts = title2.split(" - ", 1)
-            artist = parts[0].strip()
-            title = parts[1].strip()
+        # Check if we have separate artist/album fields (Spotify, local music)
+        has_artist_field = bool(status.get("artist", ""))
+        has_album_field = bool(status.get("album", ""))
+        
+        if has_artist_field:
+            # Spotify/local music format
+            artist = status.get("artist", "")
+            title = status.get("title1", "")  # Spotify puts track name in title1
+            album = status.get("album", "")
         else:
-            title = title2
+            # Radio stream format - parse from title2
+            title2 = status.get("title2", "")
+            if " - " in title2:
+                # Split on first " - " to separate artist and title
+                parts = title2.split(" - ", 1)
+                artist = parts[0].strip()
+                title = parts[1].strip()
+            else:
+                artist = ""
+                title = title2 or status.get("title1", "")
+            album = status.get("title1", "")  # Station name as album for radio
         
         # Get image URL - can be full URL or path
-        image = status.get("image", "") or status.get("stationImage", "")
+        image = status.get("image", "") or status.get("currentImage", "") or status.get("stationImage", "")
         
         # Extract relevant information
         result = {
@@ -108,13 +120,13 @@ class BluOSApi:
             "service_name": status.get("serviceName", ""),
             "service_icon": status.get("serviceIcon", ""),
             # Title fields from BluOS
-            "title1": status.get("title1", ""),  # Usually station/album name
-            "title2": title2,  # Usually "ARTIST - TITLE"
-            "title3": status.get("title3", ""),  # Usually description/tagline
+            "title1": status.get("title1", ""),
+            "title2": status.get("title2", ""),
+            "title3": status.get("title3", ""),
             # Parsed fields for media player
-            "title": title or status.get("title1", ""),  # Actual song/track title
-            "artist": artist,  # Parsed artist
-            "album": status.get("album", "") or status.get("title1", ""),  # Album or station name
+            "title": title,
+            "artist": artist,
+            "album": album,
             # Image
             "image": image,
             # Playback info
