@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -371,7 +371,7 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             # Check if this coordinator's host matches the IP
             if hasattr(coordinator, 'api') and coordinator.api.host == ip:
                 # Found the coordinator, now find its media_player entity
-                entity_registry = self.hass.helpers.entity_registry.async_get(self.hass)
+                entity_registry = er.async_get(self.hass)
                 
                 # Find media_player entity for this config entry
                 for entity in entity_registry.entities.values():
