@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-01-17
+
+### Improved
+- **Group Attributes**: Enhanced group information display for better usability
+  - `bluos_group` now shows entity IDs instead of IP addresses
+  - `master` attribute now shows entity ID instead of IP address
+  - `slaves` attribute now shows list of entity IDs instead of IP addresses
+  - Entity IDs are more stable and user-friendly than IP addresses
+- **New Attributes**: Added helpful group status attributes
+  - `is_master`: Boolean flag indicating if player is a group master
+  - `is_slave`: Boolean flag indicating if player is a slave in a group
+  - `group_name`: Shows the group/zone name from BluOS (e.g., "Woonkamer Stereo+FLEX Speaker")
+
+### Added
+- **IP to Entity ID Conversion**: New helper method `_ip_to_entity_id()`
+  - Automatically converts IP addresses to entity IDs
+  - Falls back to IP if entity not found
+  - Uses entity registry for robust lookups
+
+### Technical Details
+- Group attributes now use entity IDs for better automation support
+- Entity IDs don't change with IP address changes (more robust)
+- Group name extracted from SyncStatus `zone` attribute
+- Master/slave status determined from SyncStatus data
+
 ## [1.0.7] - 2026-01-16
 
 ### Added
@@ -192,6 +217,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.8]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.8
 [1.0.7]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.7
 [1.0.6]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.6
 [1.0.5]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.5
