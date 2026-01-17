@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.10] - 2026-01-17
+
+### Fixed
+- **Slave IP Parsing**: Fixed group slaves not appearing in attributes
+  - Slave XML uses `id` attribute, not `ip`: `<slave id="10.10.10.23" port="11000"/>`
+  - Changed from `slave.get("ip")` to `slave.get("id")`
+  - Master now correctly shows slaves in `slaves` and `bluos_group` attributes
+- **Battery Sensors When Grouped**: Fixed battery sensors disappearing when device is grouped
+  - When grouped, `/Status` endpoint doesn't include battery information
+  - Battery info is always present in `/SyncStatus`, even when grouped
+  - Changed battery parsing to use `/SyncStatus` as primary source
+  - Battery sensors now work correctly whether device is grouped or not
+  - Fallback to `/Status` for compatibility
+
+### Added
+- **Debug Logging**: Added extensive debug logging to `_ip_to_entity_id()` method
+  - Helps diagnose IP to entity ID conversion issues
+  - Logs coordinator lookups and entity registry searches
+
+### Technical Details
+- Slave IP is in `id` attribute of `<slave>` element in SyncStatus
+- Battery info location: `/SyncStatus` (always) vs `/Status` (only when ungrouped)
+- Battery sensors check SyncStatus first, then Status as fallback
+- Applied to all battery-related properties in sensor.py
+
 ## [1.0.9] - 2026-01-17
 
 ### Fixed - CRITICAL HOTFIX
@@ -230,6 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.10]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.10
 [1.0.9]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.9
 [1.0.8]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.8
 [1.0.7]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.7
