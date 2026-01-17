@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-01-17
+
+### Fixed - CRITICAL HOTFIX
+- **Entity Registry Import**: Fixed AttributeError in v1.0.8
+  - Added proper import: `from homeassistant.helpers import entity_registry as er`
+  - Fixed `_ip_to_entity_id()` to use `er.async_get()` instead of `self.hass.helpers.entity_registry.async_get()`
+  - v1.0.8 was completely broken with AttributeError on every update
+  - Integration now works correctly again
+
+### Notes
+- This is a critical hotfix for v1.0.8 which had a breaking import error
+- If you're on v1.0.8, update immediately to v1.0.9
+
 ## [1.0.8] - 2026-01-17
 
 ### Improved
@@ -217,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.0.9]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.9
 [1.0.8]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.8
 [1.0.7]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.7
 [1.0.6]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.6
