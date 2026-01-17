@@ -24,6 +24,8 @@ class BluOSApi:
         url = f"{self.base_url}/{endpoint}"
         try:
             response = requests.get(url, params=params, timeout=self.timeout)
+            # Log the actual URL that was called (with params)
+            _LOGGER.debug("BluOS API call: %s", response.url)
             response.raise_for_status()
             return response.text
         except requests.RequestException as err:
@@ -364,24 +366,25 @@ class BluOSApi:
         response = self._get("Repeat", {"state": repeat})
         return response is not None
 
-    def add_slave(self, slave_ip: str, group_name: str | None = None) -> bool:
+    def add_slave(self, slave_ip: str) -> bool:
         """Add a slave player to this master."""
         # BluOS AddSlave parameters
         # slave: IP address of the secondary player (required)
         # port: Port number of the secondary player (required)
-        # group: OPTIONAL, name of the group. If not provided, BluOS will give a default group name
         params = {
             "slave": slave_ip,
             "port": str(self.port),
         }
         
-        # Only add group parameter if provided
-        if group_name:
-            params["group"] = group_name
-        
-        _LOGGER.debug("Adding slave %s to master %s with params: %s", slave_ip, self.host, params)
+        _LOGGER.info("Adding slave %s to master %s", slave_ip, self.host)
+        _LOGGER.debug("AddSlave params: %s", params)
         response = self._get("AddSlave", params)
-        _LOGGER.debug("AddSlave response: %s", response)
+        
+        if response:
+            _LOGGER.debug("AddSlave response: %s", response[:200] if len(response) > 200 else response)
+        else:
+            _LOGGER.error("AddSlave returned no response")
+        
         return response is not None
 
     def remove_slave(self, slave_ip: str | None = None) -> bool:

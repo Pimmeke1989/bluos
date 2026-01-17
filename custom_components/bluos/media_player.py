@@ -63,7 +63,6 @@ async def async_setup_entry(
         SERVICE_JOIN,
         {
             vol.Required("master"): cv.entity_id,
-            vol.Optional("group_name"): cv.string,
         },
         "async_join_player",
     )
@@ -463,9 +462,9 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         await self.hass.async_add_executor_job(self.coordinator.api.repeat, repeat_mode)
         await self.coordinator.async_request_refresh()
 
-    async def async_join_player(self, master: str, group_name: str | None = None) -> None:
+    async def async_join_player(self, master: str) -> None:
         """Join this player to a master player."""
-        _LOGGER.info("Attempting to join %s to master %s (group_name: %s)", self.entity_id, master, group_name)
+        _LOGGER.info("Attempting to join %s to master %s", self.entity_id, master)
         
         # Get the master player's entity state
         master_entity = self.hass.states.get(master)
@@ -520,7 +519,7 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         # Call AddSlave on the master
         try:
             result = await self.hass.async_add_executor_job(
-                master_coordinator.api.add_slave, slave_ip, group_name
+                master_coordinator.api.add_slave, slave_ip
             )
             _LOGGER.debug("AddSlave result: %s", result)
             
