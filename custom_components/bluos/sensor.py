@@ -27,7 +27,11 @@ async def async_setup_entry(
     coordinator: BluOSDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     
     # Check if device has battery
-    battery_info = coordinator.data.get("status", {}).get("battery", {})
+    # Battery info is in SyncStatus (always present, even when grouped)
+    # Fallback to Status for older code compatibility
+    battery_info = coordinator.data.get("sync_status", {}).get("battery", {})
+    if not battery_info:
+        battery_info = coordinator.data.get("status", {}).get("battery", {})
     
     entities = []
     
@@ -36,6 +40,8 @@ async def async_setup_entry(
         _LOGGER.info("Device %s has battery, adding battery sensors", entry.data.get("host"))
         entities.append(BluOSBatterySensor(coordinator, entry))
         entities.append(BluOSBatteryChargingSensor(coordinator, entry))
+    else:
+        _LOGGER.debug("Device %s has no battery information", entry.data.get("host"))
     
     if entities:
         async_add_entities(entities)
@@ -80,7 +86,12 @@ class BluOSBatterySensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         
-        battery_info = self.coordinator.data.get("status", {}).get("battery", {})
+        # Battery info is in SyncStatus (always present, even when grouped)
+        battery_info = self.coordinator.data.get("sync_status", {}).get("battery", {})
+        if not battery_info:
+            # Fallback to Status
+            battery_info = self.coordinator.data.get("status", {}).get("battery", {})
+        
         return battery_info.get("level")
 
     @property
@@ -89,7 +100,10 @@ class BluOSBatterySensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.data:
             return {}
         
-        battery_info = self.coordinator.data.get("status", {}).get("battery", {})
+        # Battery info is in SyncStatus (always present, even when grouped)
+        battery_info = self.coordinator.data.get("sync_status", {}).get("battery", {})
+        if not battery_info:
+            battery_info = self.coordinator.data.get("status", {}).get("battery", {})
         
         return {
             "charging": battery_info.get("charging", False),
@@ -133,7 +147,10 @@ class BluOSBatteryChargingSensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         
-        battery_info = self.coordinator.data.get("status", {}).get("battery", {})
+        # Battery info is in SyncStatus (always present, even when grouped)
+        battery_info = self.coordinator.data.get("sync_status", {}).get("battery", {})
+        if not battery_info:
+            battery_info = self.coordinator.data.get("status", {}).get("battery", {})
         charging = battery_info.get("charging", False)
         
         return "Charging" if charging else "Not charging"
@@ -144,7 +161,10 @@ class BluOSBatteryChargingSensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.data:
             return "mdi:battery"
         
-        battery_info = self.coordinator.data.get("status", {}).get("battery", {})
+        # Battery info is in SyncStatus (always present, even when grouped)
+        battery_info = self.coordinator.data.get("sync_status", {}).get("battery", {})
+        if not battery_info:
+            battery_info = self.coordinator.data.get("status", {}).get("battery", {})
         charging = battery_info.get("charging", False)
         
         return "mdi:battery-charging" if charging else "mdi:battery"
@@ -155,7 +175,10 @@ class BluOSBatteryChargingSensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.data:
             return {}
         
-        battery_info = self.coordinator.data.get("status", {}).get("battery", {})
+        # Battery info is in SyncStatus (always present, even when grouped)
+        battery_info = self.coordinator.data.get("sync_status", {}).get("battery", {})
+        if not battery_info:
+            battery_info = self.coordinator.data.get("status", {}).get("battery", {})
         
         return {
             "battery_level": battery_info.get("level"),

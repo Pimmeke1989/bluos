@@ -208,6 +208,8 @@ class BluOSApi:
             "brand": sync_status.get("brand", ""),
             "icon": sync_status.get("icon", ""),
             "mac": sync_status.get("mac", ""),
+            # Battery info (always present in SyncStatus, even when grouped)
+            "battery": self._parse_battery(sync_status.get("battery")),
         }
         
         # Check if this player is a slave
@@ -226,7 +228,8 @@ class BluOSApi:
                 slaves = [slaves]
             result["slaves"] = [
                 {
-                    "ip": slave.get("ip", "") if isinstance(slave.get("ip"), str) else slave.get("ip", {}).get("_text", ""),
+                    # Slave XML: <slave id="10.10.10.23" port="11000"/>
+                    "ip": slave.get("id", ""),
                     "name": slave.get("name", ""),
                     "zone": slave.get("zone", ""),
                 }

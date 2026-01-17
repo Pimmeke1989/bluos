@@ -364,21 +364,30 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         if not ip:
             return None
         
+        _LOGGER.debug("_ip_to_entity_id: Converting IP %s to entity ID", ip)
+        
         # Get all BluOS coordinators from hass.data
         bluos_data = self.hass.data.get(DOMAIN, {})
+        _LOGGER.debug("_ip_to_entity_id: Found %d BluOS entries", len(bluos_data))
         
         for entry_id, coordinator in bluos_data.items():
             # Check if this coordinator's host matches the IP
             if hasattr(coordinator, 'api') and coordinator.api.host == ip:
+                _LOGGER.debug("_ip_to_entity_id: Found matching coordinator for IP %s (entry_id: %s)", ip, entry_id)
                 # Found the coordinator, now find its media_player entity
-                entity_registry = er.async_get(self.hass)
-                
-                # Find media_player entity for this config entry
-                for entity in entity_registry.entities.values():
-                    if (entity.config_entry_id == entry_id and 
-                        entity.domain == "media_player"):
-                        return entity.entity_id
+                try:
+                    entity_registry = er.async_get(self.hass)
+                    
+                    # Find media_player entity for this config entry
+                    for entity in entity_registry.entities.values():
+                        if (entity.config_entry_id == entry_id and 
+                            entity.domain == "media_player"):
+                            _LOGGER.debug("_ip_to_entity_id: Found entity %s for IP %s", entity.entity_id, ip)
+                            return entity.entity_id
+                except Exception as e:
+                    _LOGGER.error("_ip_to_entity_id: Error getting entity registry: %s", e)
         
+        _LOGGER.warning("_ip_to_entity_id: Could not find entity for IP %s, returning IP", ip)
         return None
 
     async def async_turn_on(self) -> None:
