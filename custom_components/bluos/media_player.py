@@ -318,28 +318,68 @@ class BluOSMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         
         sync_status = self.coordinator.data.get("sync_status", {})
         
-        # Build group information
-        group_info = {
-            "master": sync_status.get("master"),
-            "slaves": [slave["ip"] for slave in sync_status.get("slaves", [])],
-        }
+        # Determine if this player is a master
+        is_master = bool(sync_status.get("slaves"))
+        is_slave = bool(sync_status.get("master"))
         
-        # Create list of all players in group
+        # Build group information with entity IDs
         group_members = []
-        if sync_status.get("master"):
+        master_entity = None
+        slave_entities = []
+        
+        if is_slave:
             # This player is a slave
-            group_members.append(sync_status["master"])
-            group_members.append(self._entry.data[CONF_HOST])
-        elif sync_status.get("slaves"):
+            master_ip = sync_status.get("master")
+            master_entity = self._ip_to_entity_id(master_ip)
+            group_members.append(master_entity if master_entity else master_ip)
+            group_members.append(self.entity_id)
+        elif is_master:
             # This player is a master
-            group_members.append(self._entry.data[CONF_HOST])
-            group_members.extend([slave["ip"] for slave in sync_status["slaves"]])
+            group_members.append(self.entity_id)
+            for slave in sync_status.get("slaves", []):
+                slave_ip = slave.get("ip")
+                slave_entity = self._ip_to_entity_id(slave_ip)
+                entity_or_ip = slave_entity if slave_entity else slave_ip
+                slave_entities.append(entity_or_ip)
+                group_members.append(entity_or_ip)
         
         return {
             ATTR_BLUEOS_GROUP: group_members,
-            ATTR_MASTER: group_info["master"],
-            ATTR_SLAVES: group_info["slaves"],
+            ATTR_MASTER: master_entity if is_slave else None,
+            ATTR_SLAVES: slave_entities if is_master else [],
+            "is_master": is_master,
+            "is_slave": is_slave,
+            "group_name": sync_status.get("zone", ""),
         }
+    
+    def _ip_to_entity_id(self, ip: str | None) -> str | None:
+        """Convert IP address to entity ID by finding the matching coordinator.
+        
+        Args:
+            ip: IP address to convert
+            
+        Returns:
+            Entity ID (e.g., "media_player.flex_speaker") or None if not found
+        """
+        if not ip:
+            return None
+        
+        # Get all BluOS coordinators from hass.data
+        bluos_data = self.hass.data.get(DOMAIN, {})
+        
+        for entry_id, coordinator in bluos_data.items():
+            # Check if this coordinator's host matches the IP
+            if hasattr(coordinator, 'api') and coordinator.api.host == ip:
+                # Found the coordinator, now find its media_player entity
+                entity_registry = self.hass.helpers.entity_registry.async_get(self.hass)
+                
+                # Find media_player entity for this config entry
+                for entity in entity_registry.entities.values():
+                    if (entity.config_entry_id == entry_id and 
+                        entity.domain == "media_player"):
+                        return entity.entity_id
+        
+        return None
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
