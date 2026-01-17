@@ -11,7 +11,7 @@ DEFAULT_PORT = 11000
 DEFAULT_NAME = "BluOS Player"
 
 # Update interval
-UPDATE_INTERVAL = 5  # seconds
+UPDATE_INTERVAL = 2  # seconds (faster refresh for media information)
 
 # Services
 SERVICE_JOIN = "join"

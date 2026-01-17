@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-17 - Official Release 🎉
+
+### Changed
+- **Update Interval**: Reduced from 5 to 2 seconds for faster media information refresh
+  - Track changes appear within 2 seconds
+  - Smoother progress bar updates
+  - More responsive volume and state changes
+  - Better real-time feel
+
+### Improved
+- **Responsiveness**: 2.5x faster updates for all media information
+- **User Experience**: More app-like, real-time responsiveness
+- **Progress Bar**: Updates more frequently for smoother playback tracking
+
+### Repository
+- **Cleanup**: Removed 20+ outdated development/review files
+- **Professional**: Clean, organized repository structure
+- **Documentation**: Kept only essential user-facing documentation
+
+### Technical Details
+- `UPDATE_INTERVAL` changed from 5 to 2 seconds
+- Network impact: 30 requests/minute (up from 12)
+- Still very efficient and lightweight
+- No breaking changes
+
+### Notes
+- This is the first official stable release (v1.1.0)
+- All features from v1.0.x are included and stable
+- Recommended for all users
+
 ## [1.0.11] - 2026-01-17
 
 ### Removed
@@ -275,6 +305,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group master/slave relationship tracking
 - Preset/source management
 
+[1.1.0]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.1.0
 [1.0.11]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.11
 [1.0.10]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.10
 [1.0.9]: https://github.com/Pimmeke1989/bluos/releases/tag/v1.0.9
